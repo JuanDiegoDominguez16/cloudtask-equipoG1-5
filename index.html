@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CloudTask</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>CloudTask</h1>
+        <p>Gestion de tareas personales y de equipo</p>
+    </header>
+
+    <main>
+
+        <!-- Aqui va el formulario para crear tareas -->
+        <section id="taskform-section">
+
+            <h2>Create new task</h2>
+
+            <form id="taskform">
+
+                <div>
+                    <label for="title">Titulo</label>
+
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Enter task title"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="description">Descripcion</label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Describe the task"
+                        required
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="deadline">Fecha limite</label>
+
+                    <input
+                        type="date"
+                        id="deadline"
+                        name="deadline"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="priority">Prioridad *</label>
+
+                    <select
+                        id="priority"
+                        name="priority"
+                        required
+                    >
+                        <option value="">Select priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <button type="submit">
+                    create task
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- Task List -->
+        <section id="tasklist-section">
+
+            <h2>My Tasks</h2>
+
+            <div id="tasklist">
+                <!-- Here will be the list of tasks, this is with JavaScript -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
