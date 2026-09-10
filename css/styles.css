@@ -23,24 +23,24 @@
     --accent: #3b4bd8;
     --accent-dark: #2c39ad;
     --accent-tint: #eceefc;
- 
+
     /* Señales de prioridad y vencimiento */
     --low: #2f7d6f;
     --medium: #a9711a;
     --high: #c04236;
     --high-tint: #fbecea;
- 
+
     /* Tipografia */
     --font-display: "Space Grotesk", "Trebuchet MS", system-ui, sans-serif;
     --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
- 
+
     /* Escala modular 1.25 */
     --size-xs: 0.78rem;
     --size-sm: 0.88rem;
     --size-md: 1rem;
     --size-lg: 1.25rem;
     --size-xl: 1.56rem;
- 
+
     /* Espaciado y forma */
     --space-1: 6px;
     --space-2: 12px;
@@ -51,14 +51,14 @@
     --radius-md: 11px;
     --shell: 1080px;
 }
- 
+
 /* 2. Base y utilidades --------------------------------------------------- */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
- 
+
 body {
     margin: 0;
     background-color: var(--paper);
@@ -68,7 +68,7 @@ body {
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
 }
- 
+
 h1,
 h2,
 h3 {

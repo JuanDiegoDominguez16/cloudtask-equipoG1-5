@@ -1,20 +1,20 @@
 /* ==========================================================================
-   CloudTasks, logica de la aplicacion (Etapa 1)
+CloudTasks, logica de la aplicacion (Etapa 1)
 
-   Organizacion del archivo:
-     1. Configuracion y constantes
-     2. Referencias del DOM
-     3. Capa de datos (repositorio local, se reemplaza por Supabase en Etapa 2)
-     4. Utilidades de fecha y texto
-     5. Validacion del formulario
-     6. Renderizado de la interfaz
-     7. Manejadores de eventos
-     8. Arranque
+Organizacion del archivo:
+    1. Configuracion y constantes
+    2. Referencias del DOM
+    3. Capa de datos (repositorio local, se reemplaza por Supabase en Etapa 2)
+    4. Utilidades de fecha y texto
+    5. Validacion del formulario
+    6. Renderizado de la interfaz
+    7. Manejadores de eventos
+    8. Arranque
 
-   Decision de diseño: todas las funciones del repositorio son asincronas
-   aunque hoy trabajen contra localStorage. En la Etapa 2 solo se reemplaza
-   el objeto "repositorio" por llamadas a Supabase y el resto del archivo
-   permanece igual.
+Decision de diseño: todas las funciones del repositorio son asincronas
+aunque hoy trabajen contra localStorage. En la Etapa 2 solo se reemplaza
+el objeto "repositorio" por llamadas a Supabase y el resto del archivo
+permanece igual.
    ========================================================================== */
 
 (function () {
