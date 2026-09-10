@@ -3,84 +3,163 @@
    Organizacion:
    1. Tokens de diseño
    2. Base y utilidades
-   3. Barra superior
-   4. Layout y paneles
+   3. Estructura (app, header, main, footer)
+   4. Tarjetas y aviso de conexion
    5. Formulario
-   6. Filtros
+   6. Cabecera de lista y filtros
    7. Tarjeta de tarea
-   8. Estados vacios y pie
+   8. Estado vacio
    9. Responsive y accesibilidad
    ========================================================================== */
- 
+
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
+
 /* 1. Tokens de diseño ---------------------------------------------------- */
 :root {
-    /* Color */
-    --ink: #15192b;
-    --ink-soft: #4c5470;
-    --paper: #e9ecf3;
+    color-scheme: light;
+
+    /* Superficies y texto */
+    --bg: #eceff8;
+    --bg-glow-a: rgba(79, 70, 229, 0.16);
+    --bg-glow-b: rgba(14, 165, 233, 0.12);
     --surface: #ffffff;
-    --line: #d7dce8;
-    --accent: #3b4bd8;
-    --accent-dark: #2c39ad;
-    --accent-tint: #eceefc;
- 
+    --surface-soft: #f6f7fc;
+    --line: #e3e7f1;
+    --line-strong: #ccd3e4;
+    --ink: #151932;
+    --ink-soft: #5b6482;
+    --ink-faint: #8a92ac;
+
+    /* Marca */
+    --accent: #4f46e5;
+    --accent-strong: #3b32c4;
+    --accent-tint: #eeefff;
+    --accent-on: #ffffff;
+
     /* Señales de prioridad y vencimiento */
-    --low: #2f7d6f;
-    --medium: #a9711a;
-    --high: #c04236;
-    --high-tint: #fbecea;
- 
+    --low: #0f766e;
+    --low-tint: #e5f4f1;
+    --medium: #b45309;
+    --medium-tint: #fdf1e1;
+    --high: #d13b3b;
+    --high-tint: #fdeceb;
+
     /* Tipografia */
-    --font-display: "Space Grotesk", "Trebuchet MS", system-ui, sans-serif;
-    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
- 
+    --font-display: "Outfit", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
     /* Escala modular 1.25 */
-    --size-xs: 0.78rem;
-    --size-sm: 0.88rem;
+    --size-xs: 0.75rem;
+    --size-sm: 0.875rem;
     --size-md: 1rem;
     --size-lg: 1.25rem;
-    --size-xl: 1.56rem;
- 
+    --size-xl: 1.6rem;
+    --size-2xl: 2.25rem;
+
     /* Espaciado y forma */
     --space-1: 6px;
     --space-2: 12px;
     --space-3: 18px;
     --space-4: 26px;
     --space-5: 40px;
-    --radius-sm: 7px;
-    --radius-md: 11px;
-    --shell: 1080px;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shell: 1120px;
+
+    /* Elevacion */
+    --shadow-sm: 0 1px 2px rgba(21, 25, 50, 0.05);
+    --shadow-md: 0 10px 30px -12px rgba(21, 25, 50, 0.18), 0 1px 2px rgba(21, 25, 50, 0.05);
+    --shadow-focus: 0 0 0 3px var(--accent-tint);
+
+    /* Flecha del select (comillas simples del SVG escapadas como %27) */
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath fill=%27none%27 stroke=%27%235b6482%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M1 1.5 6 6.5l5-5%27/%3E%3C/svg%3E");
 }
- 
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+
+        --bg: #0d1020;
+        --bg-glow-a: rgba(99, 102, 241, 0.22);
+        --bg-glow-b: rgba(14, 165, 233, 0.14);
+        --surface: #161a2c;
+        --surface-soft: #1c2136;
+        --line: #2a3049;
+        --line-strong: #3a4262;
+        --ink: #e9ecf7;
+        --ink-soft: #a6aec8;
+        --ink-faint: #7d86a2;
+
+        --accent: #7f88ff;
+        --accent-strong: #9aa1ff;
+        --accent-tint: rgba(127, 136, 255, 0.16);
+        --accent-on: #10132a;
+
+        --low: #4ecdb5;
+        --low-tint: rgba(78, 205, 181, 0.14);
+        --medium: #e0a44b;
+        --medium-tint: rgba(224, 164, 75, 0.14);
+        --high: #ff7b74;
+        --high-tint: rgba(255, 123, 116, 0.14);
+
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 14px 34px -14px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-focus: 0 0 0 3px rgba(127, 136, 255, 0.3);
+
+        --select-arrow: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath fill=%27none%27 stroke=%27%23a6aec8%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M1 1.5 6 6.5l5-5%27/%3E%3C/svg%3E");
+    }
+}
+
 /* 2. Base y utilidades --------------------------------------------------- */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
- 
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     margin: 0;
-    background-color: var(--paper);
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(60rem 32rem at 12% -8%, var(--bg-glow-a), transparent 60%),
+        radial-gradient(48rem 28rem at 100% 0%, var(--bg-glow-b), transparent 55%);
+    background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-body);
     font-size: var(--size-md);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
- 
+
 h1,
 h2,
 h3 {
     font-family: var(--font-display);
     line-height: 1.2;
+    letter-spacing: -0.015em;
     margin: 0;
 }
- 
+
 p {
     margin: 0;
 }
- 
+
+code {
+    font-family: ui-monospace, "SFMono-Regular", "Consolas", monospace;
+    font-size: 0.9em;
+    padding: 1px 5px;
+    border-radius: 5px;
+    background-color: var(--surface-soft);
+    border: 1px solid var(--line);
+}
+
 button,
 input,
 select,
@@ -88,307 +167,379 @@ textarea {
     font: inherit;
     color: inherit;
 }
- 
+
+[hidden] {
+    display: none !important;
+}
+
 :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
- 
-.skip-link {
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    background-color: var(--surface);
-    color: var(--ink);
-    padding: var(--space-2);
-    z-index: 10;
-}
- 
-.skip-link:focus {
-    left: var(--space-2);
-    top: var(--space-2);
-}
- 
+
 .visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;
+    padding: 0;
     overflow: hidden;
     clip: rect(0 0 0 0);
+    clip-path: inset(50%);
     white-space: nowrap;
+    border: 0;
 }
- 
-/* 3. Barra superior ------------------------------------------------------ */
-.topbar {
-    background-color: var(--ink);
-    color: #f4f6fb;
-    border-bottom: 4px solid var(--accent);
-}
- 
-.topbar__inner {
+
+/* 3. Estructura ---------------------------------------------------------- */
+.app {
     max-width: var(--shell);
     margin: 0 auto;
-    padding: var(--space-4) var(--space-3);
+    padding: var(--space-5) var(--space-3) var(--space-4);
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-3);
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 100vh;
 }
- 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
- 
-.brand__mark {
-    width: 38px;
-    height: 38px;
-    flex: none;
-}
- 
-.brand__mark rect {
-    fill: var(--accent);
-}
- 
-.brand__name {
-    font-size: var(--size-xl);
-    letter-spacing: -0.015em;
-}
- 
-.brand__tagline {
-    font-size: var(--size-sm);
-    color: #a9b1cc;
-}
- 
-.topbar__summary {
-    font-size: var(--size-sm);
-    color: #cdd3e6;
-    max-width: 46ch;
-}
- 
-/* 4. Layout y paneles ---------------------------------------------------- */
-.layout {
-    max-width: var(--shell);
-    margin: 0 auto;
-    padding: var(--space-4) var(--space-3);
+
+.app__header {
     display: grid;
-    grid-template-columns: 340px minmax(0, 1fr);
-    gap: var(--space-3);
-    align-items: start;
+    gap: var(--space-1);
+    justify-items: center;
+    text-align: center;
 }
- 
-.panel {
+
+.app__header h1 {
+    font-size: var(--size-2xl);
+    font-weight: 700;
+    background-image: linear-gradient(105deg, var(--ink) 20%, var(--accent) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    padding-bottom: 2px;
+}
+
+.app__header h1::after {
+    content: "";
+    display: block;
+    width: 52px;
+    height: 3px;
+    margin: var(--space-2) auto 0;
+    border-radius: 999px;
+    background-image: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.app__subtitle {
+    max-width: 46ch;
+    color: var(--ink-soft);
+    font-size: var(--size-sm);
+}
+
+.app__main {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3);
+}
+
+.app__footer {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: var(--size-xs);
+    color: var(--ink-faint);
+}
+
+/* 4. Tarjetas y aviso de conexion ---------------------------------------- */
+.card {
     background-color: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-3);
+    box-shadow: var(--shadow-md);
 }
- 
-.panel--form {
+
+.card h2 {
+    font-size: var(--size-lg);
+    font-weight: 600;
+}
+
+/* Panel del formulario: primera columna, fija al hacer scroll */
+.card[aria-labelledby="form-title"] {
     position: sticky;
     top: var(--space-3);
 }
- 
-.panel__title {
-    font-size: var(--size-lg);
-    letter-spacing: -0.01em;
+
+.connection-error {
+    grid-column: 1 / -1;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--high);
+    border-left-width: 4px;
+    border-radius: var(--radius-md);
+    background-color: var(--high-tint);
+    color: var(--high);
+    font-size: var(--size-sm);
 }
- 
+
+.connection-error code {
+    background-color: transparent;
+    border-color: currentColor;
+    color: inherit;
+}
+
 /* 5. Formulario ---------------------------------------------------------- */
-.form {
+#formulario-tarea {
     margin-top: var(--space-3);
     display: grid;
     gap: var(--space-2);
 }
- 
-.field {
+
+.form-group {
     display: grid;
-    gap: 4px;
+    gap: var(--space-1);
 }
- 
-.field-row {
+
+.form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-2);
 }
- 
-.field__label {
+
+.form-group label {
     font-size: var(--size-sm);
     font-weight: 500;
     color: var(--ink-soft);
 }
- 
-.field__input {
+
+.form-group input,
+.form-group textarea,
+.form-group select {
     width: 100%;
-    padding: 9px 11px;
+    padding: 10px 12px;
     background-color: var(--surface);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
- 
-.field__input:hover {
-    border-color: #b9c1d4;
+
+.form-group input:hover,
+.form-group textarea:hover,
+.form-group select:hover {
+    border-color: var(--accent);
 }
- 
-.field__input::placeholder {
-    color: #98a0b8;
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
- 
-.field__input--area {
+
+.form-group ::placeholder {
+    color: var(--ink-faint);
+}
+
+.form-group textarea {
     resize: vertical;
-    min-height: 78px;
+    min-height: 84px;
 }
- 
-.field__input.is-invalid {
+
+.form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 34px;
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+}
+
+.form-group input[type="date"] {
+    cursor: text;
+}
+
+/* La clase is-invalid la agrega app.js al validar */
+.form-group input.is-invalid,
+.form-group select.is-invalid {
     border-color: var(--high);
     background-color: var(--high-tint);
 }
- 
-.field__error {
+
+.error-message {
     font-size: var(--size-xs);
     color: var(--high);
     min-height: 1em;
 }
- 
-.button {
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    padding: 10px 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
- 
-.button--primary {
-    background-color: var(--accent);
-    color: #ffffff;
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
     margin-top: var(--space-1);
 }
- 
-.button--primary:hover {
-    background-color: var(--accent-dark);
-}
- 
-.form__status {
+
+.btn {
+    flex: 1 1 auto;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 11px 18px;
+    font-weight: 600;
     font-size: var(--size-sm);
-    color: var(--low);
-    min-height: 1.4em;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+        color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
- 
-/* 6. Filtros ------------------------------------------------------------- */
-.list__head {
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn--primary {
+    background-color: var(--accent);
+    color: var(--accent-on);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover {
+    background-color: var(--accent-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.btn--ghost {
+    background-color: transparent;
+    border-color: var(--line-strong);
+    color: var(--ink-soft);
+}
+
+.btn--ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* 6. Cabecera de lista y filtros ----------------------------------------- */
+.list-header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
 }
- 
+
 .filters {
     display: flex;
     gap: var(--space-1);
-}
- 
-.filter {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background-color: transparent;
-    border: 1px solid var(--line);
+    padding: 4px;
     border-radius: 999px;
-    padding: 5px 12px;
+    background-color: var(--surface-soft);
+    border: 1px solid var(--line);
+}
+
+.filter-btn {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 6px 14px;
     font-size: var(--size-sm);
     color: var(--ink-soft);
     cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+        color 0.15s ease;
 }
- 
-.filter:hover {
-    border-color: var(--accent);
+
+.filter-btn:hover {
     color: var(--accent);
 }
- 
-.filter.is-active {
-    background-color: var(--accent-tint);
-    border-color: var(--accent);
-    color: var(--accent-dark);
+
+.filter-btn.is-active {
+    background-color: var(--surface);
+    border-color: var(--line-strong);
+    color: var(--accent);
     font-weight: 600;
+    box-shadow: var(--shadow-sm);
 }
- 
-.filter__count {
-    font-variant-numeric: tabular-nums;
-    font-size: var(--size-xs);
+
+.task-summary {
+    margin-top: var(--space-2);
+    font-size: var(--size-sm);
     color: var(--ink-soft);
 }
- 
-.filter.is-active .filter__count {
-    color: var(--accent-dark);
-}
- 
+
 /* 7. Tarjeta de tarea ---------------------------------------------------- */
-.tasks {
+.task-list {
     list-style: none;
     margin: var(--space-3) 0 0;
     padding: 0;
     display: grid;
     gap: var(--space-2);
 }
- 
+
 .task {
     display: flex;
     align-items: flex-start;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
     border: 1px solid var(--line);
-    border-left: 3px solid var(--line);
-    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--line-strong);
+    border-radius: var(--radius-md);
     background-color: var(--surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease,
+        transform 0.15s ease;
 }
- 
+
+.task:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
 .task--low {
     border-left-color: var(--low);
 }
- 
+
 .task--medium {
     border-left-color: var(--medium);
 }
- 
+
 .task--high {
     border-left-color: var(--high);
 }
- 
+
 .task__check {
-    margin-top: 3px;
+    margin-top: 4px;
     width: 18px;
     height: 18px;
     accent-color: var(--accent);
     flex: none;
     cursor: pointer;
 }
- 
+
 .task__body {
     flex: 1;
     min-width: 0;
     display: grid;
     gap: 4px;
 }
- 
+
 .task__title {
+    font-family: var(--font-body);
     font-size: var(--size-md);
     font-weight: 600;
+    letter-spacing: 0;
     overflow-wrap: anywhere;
 }
- 
+
 .task__description {
     font-size: var(--size-sm);
     color: var(--ink-soft);
     overflow-wrap: anywhere;
 }
- 
+
+/* app.js siempre crea el parrafo, aunque la descripcion es opcional */
+.task__description:empty {
+    display: none;
+}
+
 .task__meta {
     display: flex;
     flex-wrap: wrap;
@@ -396,168 +547,178 @@ textarea {
     gap: var(--space-1);
     margin-top: 2px;
 }
- 
+
 .chip {
     font-size: var(--size-xs);
-    padding: 2px 8px;
+    font-weight: 500;
+    padding: 3px 10px;
     border-radius: 999px;
     border: 1px solid var(--line);
+    background-color: var(--surface-soft);
     color: var(--ink-soft);
     white-space: nowrap;
 }
- 
+
 .chip--overdue {
     border-color: var(--high);
     background-color: var(--high-tint);
     color: var(--high);
     font-weight: 600;
 }
- 
+
 .chip--today {
     border-color: var(--medium);
+    background-color: var(--medium-tint);
     color: var(--medium);
     font-weight: 600;
 }
- 
+
 .chip--done {
     border-color: var(--low);
+    background-color: var(--low-tint);
     color: var(--low);
 }
- 
-/* Prioridad representada con barras, no solo con color */
+
+/* Prioridad representada con barras, no solo con color.
+   Se excluye el span accesible que app.js agrega como cuarto hijo. */
 .priority {
     display: inline-flex;
     align-items: flex-end;
     gap: 2px;
     height: 12px;
+    padding-left: 2px;
 }
- 
-.priority span {
+
+.priority > span:not(.visually-hidden) {
     width: 3px;
-    background-color: var(--line);
+    background-color: var(--line-strong);
     border-radius: 1px;
 }
- 
-.priority span:nth-child(1) {
+
+.priority > span:nth-child(1) {
     height: 5px;
 }
- 
-.priority span:nth-child(2) {
+
+.priority > span:nth-child(2) {
     height: 9px;
 }
- 
-.priority span:nth-child(3) {
+
+.priority > span:nth-child(3) {
     height: 12px;
 }
- 
+
 .priority--low span.is-on {
     background-color: var(--low);
 }
- 
+
 .priority--medium span.is-on {
     background-color: var(--medium);
 }
- 
+
 .priority--high span.is-on {
     background-color: var(--high);
 }
- 
+
 .task__delete {
     flex: none;
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: var(--radius-sm);
-    padding: 5px;
-    color: var(--ink-soft);
+    padding: 5px 10px;
+    font-size: var(--size-xs);
+    font-weight: 600;
+    color: var(--ink-faint);
     cursor: pointer;
-    line-height: 0;
-    transition: color 0.15s ease, border-color 0.15s ease;
+    transition: color 0.15s ease, border-color 0.15s ease,
+        background-color 0.15s ease;
 }
- 
+
 .task__delete:hover {
     color: var(--high);
     border-color: var(--high);
+    background-color: var(--high-tint);
 }
- 
+
 .task.is-completed {
-    background-color: #f7f8fc;
+    background-color: var(--surface-soft);
+    border-left-color: var(--line-strong);
 }
- 
+
 .task.is-completed .task__title {
     text-decoration: line-through;
     color: var(--ink-soft);
     font-weight: 500;
 }
- 
-.task.is-new {
-    animation: entrada 0.45s ease-out;
+
+.task.is-completed .task__description {
+    color: var(--ink-faint);
 }
- 
-@keyframes entrada {
-    from {
-        background-color: var(--accent-tint);
-    }
- 
-    to {
-        background-color: var(--surface);
-    }
-}
- 
-/* 8. Estados vacios y pie ------------------------------------------------ */
-.empty {
+
+/* 8. Estado vacio -------------------------------------------------------- */
+.empty-state {
     margin-top: var(--space-3);
     padding: var(--space-4) var(--space-3);
-    border: 1px dashed var(--line);
-    border-radius: var(--radius-sm);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-soft);
     color: var(--ink-soft);
     text-align: center;
     font-size: var(--size-sm);
 }
- 
-.footer {
-    max-width: var(--shell);
-    margin: 0 auto;
-    padding: 0 var(--space-3) var(--space-5);
-    font-size: var(--size-xs);
-    color: var(--ink-soft);
-}
- 
-.footer.is-warning {
-    color: var(--high);
-    font-weight: 600;
-}
- 
+
 /* 9. Responsive y accesibilidad ------------------------------------------ */
-@media (max-width: 880px) {
-    .layout {
+@media (max-width: 900px) {
+    .app__main {
         grid-template-columns: minmax(0, 1fr);
     }
- 
-    .panel--form {
+
+    .card[aria-labelledby="form-title"] {
         position: static;
     }
 }
- 
-@media (max-width: 520px) {
-    .field-row {
+
+@media (max-width: 540px) {
+    .app {
+        padding: var(--space-4) var(--space-2) var(--space-3);
+    }
+
+    .card {
+        padding: var(--space-3) var(--space-2);
+    }
+
+    .form-row {
         grid-template-columns: minmax(0, 1fr);
     }
- 
-    .topbar__inner {
-        align-items: flex-start;
-    }
- 
+
     .filters {
+        width: 100%;
+    }
+
+    .filter-btn {
+        flex: 1;
+        padding: 6px 8px;
+    }
+
+    .task {
         flex-wrap: wrap;
     }
+
+    .task__delete {
+        margin-left: auto;
+    }
 }
- 
+
 @media (prefers-reduced-motion: reduce) {
- 
+
     *,
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .task:hover {
+        transform: none;
     }
 }

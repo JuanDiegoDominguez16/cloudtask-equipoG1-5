@@ -1,360 +1,319 @@
-/**
- * CloudTasks — Etapa 2
- * Aplicación de gestión de tareas conectada a Supabase (PostgreSQL).
- *
- * Estructura de una tarea (columnas de la tabla `tasks` en Supabase):
- * {
- *   id: string (uuid),   // Identificador único, generado por la base de datos
- *   title: string,       // Título de la tarea
- *   description: string, // Descripción
- *   completed: boolean,  // Estado de la tarea
- *   created_at: string,  // Fecha de creación (generada por la base de datos)
- *   deadline: string|null, // Fecha límite (YYYY-MM-DD)
- *   priority: "low" | "medium" | "high" // Prioridad
- * }
- *
- * El acceso a datos sigue aislado en el objeto TaskStore, tal como en la
- * Etapa 1 (que usaba localStorage). Ahora sus 4 funciones hablan con
- * Supabase mediante `supabaseClient` (definido en js/supabaseClient.js),
- * pero el resto de la aplicación (formulario, renderizado, filtros) no
- * tuvo que cambiar en su lógica, solo pasar a trabajar con async/await.
- */
+/* CloudTasks: logica principal de la aplicacion. */
 
-(function () {
-  "use strict";
+(() => {
+	const PRIORITIES = {
+		low: { label: "Prioridad baja", level: 1 },
+		medium: { label: "Prioridad media", level: 2 },
+		high: { label: "Prioridad alta", level: 3 },
+	};
 
-  /* ------------------------------------------------------------------
-   * Capa de acceso a datos (Etapa 2: Supabase / PostgreSQL)
-   * ------------------------------------------------------------------ */
-  const TaskStore = {
-    async getAll() {
-      const { data, error } = await supabaseClient
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
+	const state = { tasks: [], filter: "all" };
+	const dom = {
+		form: document.getElementById("formulario-tarea"),
+		title: document.getElementById("title"),
+		description: document.getElementById("description"),
+		deadline: document.getElementById("deadline"),
+		priority: document.getElementById("priority"),
+		taskList: document.getElementById("task-list"),
+		emptyState: document.getElementById("empty-state"),
+		summary: document.getElementById("task-summary"),
+		connectionError: document.getElementById("connection-error"),
+		filters: [...document.querySelectorAll(".filter-btn")],
+	};
 
-      if (error) {
-        console.error("Error obteniendo tareas de Supabase:", error);
-        throw error;
-      }
-      return data;
-    },
+	const repository = {
+		async list() {
+			const { data, error } = await window.supabaseClient
+				.from("tasks")
+				.select("*")
+				.order("created_at", { ascending: false });
+			if (error) throw error;
+			return data ?? [];
+		},
+		async create(task) {
+			const { data, error } = await window.supabaseClient
+				.from("tasks")
+				.insert(task)
+				.select()
+				.single();
+			if (error) throw error;
+			return data;
+		},
+		async update(id, changes) {
+			const { error } = await window.supabaseClient
+				.from("tasks")
+				.update(changes)
+				.eq("id", id);
+			if (error) throw error;
+		},
+		async remove(id) {
+			const { error } = await window.supabaseClient
+				.from("tasks")
+				.delete()
+				.eq("id", id);
+			if (error) throw error;
+		},
+	};
 
-    async create(task) {
-      const { data, error } = await supabaseClient
-        .from("tasks")
-        .insert(task)
-        .select()
-        .single();
+	const createId = () =>
+		window.crypto?.randomUUID?.() ??
+		`tarea_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+	const parseLocalDate = (isoDate) => {
+		const [year, month, day] = String(isoDate).split("-").map(Number);
+		return new Date(year, month - 1, day);
+	};
+	const today = () => {
+		const date = new Date();
+		return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+	};
+	const daysUntil = (isoDate) =>
+		Math.round((parseLocalDate(isoDate) - today()) / 86400000);
+	const readableDate = (isoDate) =>
+		parseLocalDate(isoDate).toLocaleDateString("es-CO", {
+			day: "numeric",
+			month: "short",
+		});
 
-      if (error) {
-        console.error("Error creando tarea en Supabase:", error);
-        throw error;
-      }
-      return data;
-    },
+	function describeDeadline(task) {
+		if (task.completed) return { text: "Completada", className: "chip--done" };
+		const days = daysUntil(task.deadline);
+		if (days < 0) {
+			const overdueDays = Math.abs(days);
+			return {
+				text: `Vencida hace ${overdueDays} ${overdueDays === 1 ? "dia" : "dias"}`,
+				className: "chip--overdue",
+			};
+		}
+		if (days === 0) return { text: "Vence hoy", className: "chip--today" };
+		if (days === 1) return { text: "Vence mañana", className: "chip--today" };
+		return {
+			text: `Vence en ${days} dias, ${readableDate(task.deadline)}`,
+			className: "",
+		};
+	}
 
-    async update(id, changes) {
-      const { data, error } = await supabaseClient
-        .from("tasks")
-        .update(changes)
-        .eq("id", id)
-        .select()
-        .single();
+	function validate(data) {
+		const errors = {};
+		if (!data.title) errors.title = "Escribe un titulo para la tarea.";
+		else if (data.title.length < 3)
+			errors.title = "El titulo necesita al menos 3 caracteres.";
+		else if (data.title.length > 80)
+			errors.title = "El titulo admite maximo 80 caracteres.";
+		if (!data.deadline) errors.deadline = "Elige una fecha limite.";
+		else if (Number.isNaN(parseLocalDate(data.deadline).getTime())) {
+			errors.deadline = "La fecha no tiene un formato valido.";
+		} else if (parseLocalDate(data.deadline) < today()) {
+			errors.deadline = "La fecha limite no puede estar en el pasado.";
+		}
+		if (!PRIORITIES[data.priority])
+			errors.priority = "Selecciona una prioridad.";
+		return errors;
+	}
 
-      if (error) {
-        console.error("Error actualizando tarea en Supabase:", error);
-        throw error;
-      }
-      return data;
-    },
+	function renderErrors(errors) {
+		["title", "deadline", "priority"].forEach((field) => {
+			const input = document.getElementById(field);
+			const errorElement = document.getElementById(`${field}-error`);
+			const message = errors[field] ?? "";
+			input?.classList.toggle("is-invalid", Boolean(message));
+			input?.setAttribute("aria-invalid", message ? "true" : "false");
+			if (errorElement) errorElement.textContent = message;
+		});
+	}
 
-    async remove(id) {
-      const { error } = await supabaseClient.from("tasks").delete().eq("id", id);
+	function createPriorityBars(priority) {
+		const container = document.createElement("span");
+		container.className = `priority priority--${priority}`;
+		container.title = PRIORITIES[priority].label;
+		for (let index = 1; index <= 3; index += 1) {
+			const bar = document.createElement("span");
+			if (index <= PRIORITIES[priority].level) bar.className = "is-on";
+			container.appendChild(bar);
+		}
+		const accessibleLabel = document.createElement("span");
+		accessibleLabel.className = "visually-hidden";
+		accessibleLabel.textContent = PRIORITIES[priority].label;
+		container.appendChild(accessibleLabel);
+		return container;
+	}
 
-      if (error) {
-        console.error("Error eliminando tarea en Supabase:", error);
-        throw error;
-      }
-    },
-  };
+	function createTaskElement(task) {
+		const item = document.createElement("li");
+		item.className = `task task--${task.priority}${task.completed ? " is-completed" : ""}`;
+		item.dataset.id = task.id;
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.className = "task__check";
+		checkbox.checked = Boolean(task.completed);
+		checkbox.dataset.action = "toggle";
+		checkbox.setAttribute(
+			"aria-label",
+			`Marcar "${task.title}" como completada`,
+		);
+		const body = document.createElement("div");
+		body.className = "task__body";
+		const title = document.createElement("h3");
+		title.className = "task__title";
+		title.textContent = task.title;
+		const description = document.createElement("p");
+		description.className = "task__description";
+		description.textContent = task.description;
+		const metadata = document.createElement("div");
+		metadata.className = "task__meta";
+		const deadline = describeDeadline(task);
+		const chip = document.createElement("span");
+		chip.className = `chip ${deadline.className}`;
+		chip.textContent = deadline.text;
+		metadata.append(chip, createPriorityBars(task.priority));
+		body.append(title, description, metadata);
+		const deleteButton = document.createElement("button");
+		deleteButton.type = "button";
+		deleteButton.className = "task__delete";
+		deleteButton.dataset.action = "delete";
+		deleteButton.setAttribute("aria-label", `Eliminar "${task.title}"`);
+		deleteButton.textContent = "Eliminar";
+		item.append(checkbox, body, deleteButton);
+		return item;
+	}
 
-  /* ------------------------------------------------------------------
-   * Utilidades
-   * ------------------------------------------------------------------ */
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
+	const sortTasks = (tasks) =>
+		[...tasks].sort((a, b) => {
+			if (a.completed !== b.completed) return a.completed ? 1 : -1;
+			if (a.completed) return new Date(b.created_at) - new Date(a.created_at);
+			return parseLocalDate(a.deadline) - parseLocalDate(b.deadline);
+		});
+	const visibleTasks = () =>
+		state.tasks.filter((task) =>
+			state.filter === "pending"
+				? !task.completed
+				: state.filter === "completed"
+					? task.completed
+					: true,
+		);
 
-  function formatDate(isoDate) {
-    if (!isoDate) return null;
-    const [year, month, day] = isoDate.split("-");
-    return `${day}/${month}/${year}`;
-  }
+	function renderSummary() {
+		const pending = state.tasks.filter((task) => !task.completed).length;
+		if (!state.tasks.length) {
+			dom.summary.textContent = "Todavia no hay tareas registradas.";
+			return;
+		}
+		const overdue = state.tasks.filter(
+			(task) => !task.completed && daysUntil(task.deadline) < 0,
+		).length;
+		let message =
+			pending === 0
+				? "No queda nada pendiente."
+				: `Tienes ${pending} ${pending === 1 ? "tarea pendiente" : "tareas pendientes"}.`;
+		if (overdue)
+			message += ` ${overdue} ${overdue === 1 ? "esta vencida." : "estan vencidas."}`;
+		dom.summary.textContent = message;
+	}
 
-  function isOverdue(task) {
-    if (!task.deadline || task.completed) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const deadline = new Date(task.deadline + "T00:00:00");
-    return deadline < today;
-  }
+	function render() {
+		const tasks = sortTasks(visibleTasks());
+		dom.taskList.replaceChildren(...tasks.map(createTaskElement));
+		dom.emptyState.hidden = tasks.length > 0;
+		if (!tasks.length) {
+			dom.emptyState.textContent =
+				state.filter === "pending"
+					? "No tienes tareas pendientes. Todo esta al dia."
+					: state.filter === "completed"
+						? "Todavia no has completado ninguna tarea."
+						: "Aun no hay tareas. Crea la primera con el formulario.";
+		}
+		renderSummary();
+	}
 
-  function filterTasks(tasks, filter) {
-    if (filter === "pending") return tasks.filter((t) => !t.completed);
-    if (filter === "completed") return tasks.filter((t) => t.completed);
-    return tasks;
-  }
+	async function handleSubmit(event) {
+		event.preventDefault();
+		const data = {
+			title: dom.title.value.trim(),
+			description: dom.description.value.trim(),
+			deadline: dom.deadline.value,
+			priority: dom.priority.value,
+		};
+		const errors = validate(data);
+		renderErrors(errors);
+		if (Object.keys(errors).length) {
+			document.getElementById(Object.keys(errors)[0])?.focus();
+			return;
+		}
+		const task = {
+			id: createId(),
+			...data,
+			completed: false,
+			created_at: new Date().toISOString(),
+		};
+		try {
+			const createdTask = await repository.create(task);
+			state.tasks.push(createdTask ?? task);
+			dom.form.reset();
+			render();
+		} catch (error) {
+			console.error("No se pudo crear la tarea:", error);
+			dom.connectionError.hidden = false;
+		}
+	}
 
-  const PRIORITY_LABELS = { low: "Baja", medium: "Media", high: "Alta" };
+	async function handleTaskAction(event) {
+		const actionElement = event.target.closest("[data-action]");
+		if (!actionElement) return;
+		const item = actionElement.closest(".task");
+		const id = item?.dataset.id;
+		if (!id) return;
+		if (actionElement.dataset.action === "toggle") {
+			const completed = actionElement.checked;
+			try {
+				await repository.update(id, { completed });
+				state.tasks = state.tasks.map((task) =>
+					task.id === id ? { ...task, completed } : task,
+				);
+				render();
+			} catch (error) {
+				console.error("No se pudo actualizar la tarea:", error);
+				dom.connectionError.hidden = false;
+			}
+			return;
+		}
+		const task = state.tasks.find((candidate) => candidate.id === id);
+		if (task && window.confirm(`Eliminar la tarea "${task.title}"`)) {
+			try {
+				await repository.remove(id);
+				state.tasks = state.tasks.filter((candidate) => candidate.id !== id);
+				render();
+			} catch (error) {
+				console.error("No se pudo eliminar la tarea:", error);
+				dom.connectionError.hidden = false;
+			}
+		}
+	}
 
-  /* ------------------------------------------------------------------
-   * Referencias al DOM
-   * ------------------------------------------------------------------ */
-  const form = document.getElementById("task-form");
-  const idInput = document.getElementById("task-id");
-  const titleInput = document.getElementById("title");
-  const descriptionInput = document.getElementById("description");
-  const deadlineInput = document.getElementById("deadline");
-  const priorityInput = document.getElementById("priority");
-  const titleError = document.getElementById("title-error");
-  const deadlineError = document.getElementById("deadline-error");
-  const submitBtn = document.getElementById("submit-btn");
-  const cancelEditBtn = document.getElementById("cancel-edit-btn");
-  const taskList = document.getElementById("task-list");
-  const emptyState = document.getElementById("empty-state");
-  const taskSummary = document.getElementById("task-summary");
-  const connectionError = document.getElementById("connection-error");
-  const filterButtons = document.querySelectorAll(".filter-btn");
+	function handleFilter(event) {
+		state.filter = event.currentTarget.dataset.filter;
+		dom.filters.forEach((button) => {
+			const isActive = button.dataset.filter === state.filter;
+			button.classList.toggle("is-active", isActive);
+			button.setAttribute("aria-pressed", String(isActive));
+		});
+		render();
+	}
 
-  let currentFilter = "all";
-  let cachedTasks = []; // usado para "Editar" sin volver a consultar Supabase
+	async function init() {
+		dom.deadline.min = new Date().toISOString().slice(0, 10);
+		dom.form.addEventListener("submit", handleSubmit);
+		dom.taskList.addEventListener("change", handleTaskAction);
+		dom.taskList.addEventListener("click", handleTaskAction);
+		dom.filters.forEach((button) => {
+			button.addEventListener("click", handleFilter);
+		});
+		try {
+			state.tasks = await repository.list();
+			render();
+		} catch (error) {
+			console.error("No se pudieron cargar las tareas:", error);
+			dom.connectionError.hidden = false;
+		}
+	}
 
-  /* ------------------------------------------------------------------
-   * Validación
-   * ------------------------------------------------------------------ */
-  function validateForm() {
-    let isValid = true;
-    titleError.textContent = "";
-    deadlineError.textContent = "";
-    titleInput.classList.remove("is-invalid");
-    deadlineInput.classList.remove("is-invalid");
-
-    const title = titleInput.value.trim();
-    if (!title) {
-      titleError.textContent = "El título es obligatorio.";
-      titleInput.classList.add("is-invalid");
-      isValid = false;
-    } else if (title.length > 80) {
-      titleError.textContent = "El título no puede superar 80 caracteres.";
-      titleInput.classList.add("is-invalid");
-      isValid = false;
-    }
-
-    const deadline = deadlineInput.value;
-    if (deadline) {
-      const parsed = new Date(deadline + "T00:00:00");
-      if (Number.isNaN(parsed.getTime())) {
-        deadlineError.textContent = "La fecha límite no es válida.";
-        deadlineInput.classList.add("is-invalid");
-        isValid = false;
-      }
-    }
-
-    return isValid;
-  }
-
-  /* ------------------------------------------------------------------
-   * Renderizado
-   * ------------------------------------------------------------------ */
-  function renderSummary(allTasks) {
-    const total = allTasks.length;
-    const completed = allTasks.filter((t) => t.completed).length;
-    taskSummary.textContent = total === 0 ? "" : `${completed} de ${total} tarea(s) completadas.`;
-  }
-
-  function renderTaskItems(tasks, allTasksCount) {
-    taskList.innerHTML = "";
-
-    if (allTasksCount === 0) {
-      emptyState.hidden = false;
-      emptyState.textContent = "No hay tareas registradas todavía. ¡Agrega la primera!";
-      return;
-    }
-
-    if (tasks.length === 0) {
-      emptyState.hidden = false;
-      emptyState.textContent = "No hay tareas que coincidan con este filtro.";
-      return;
-    }
-
-    emptyState.hidden = true;
-
-    tasks.forEach((task) => {
-      const li = document.createElement("li");
-      li.className = "task-item" + (task.completed ? " is-completed" : "");
-      li.dataset.priority = task.priority || "medium";
-      li.dataset.id = task.id;
-
-      const overdue = isOverdue(task);
-      const statusBadge = task.completed
-        ? '<span class="badge badge--status-completed">Completada</span>'
-        : '<span class="badge badge--status-pending">Pendiente</span>';
-      const priorityBadge = `<span class="badge badge--priority-${task.priority}">Prioridad ${PRIORITY_LABELS[task.priority] || "Media"}</span>`;
-      const deadlineBadge = task.deadline
-        ? `<span class="badge${overdue ? " badge--overdue" : ""}">${overdue ? "Vencida: " : "Vence: "}${formatDate(task.deadline)}</span>`
-        : "";
-
-      li.innerHTML = `
-        <input type="checkbox" class="task-item__checkbox" ${task.completed ? "checked" : ""} aria-label="Marcar tarea como completada" />
-        <div class="task-item__body">
-          <p class="task-item__title">${escapeHtml(task.title)}</p>
-          ${task.description ? `<p class="task-item__description">${escapeHtml(task.description)}</p>` : ""}
-          <div class="task-item__meta">
-            ${statusBadge}
-            ${priorityBadge}
-            ${deadlineBadge}
-          </div>
-        </div>
-        <div class="task-item__actions">
-          <button type="button" class="icon-btn" data-action="edit">Editar</button>
-          <button type="button" class="icon-btn icon-btn--danger" data-action="delete">Eliminar</button>
-        </div>
-      `;
-
-      taskList.appendChild(li);
-    });
-  }
-
-  async function renderTasks() {
-    try {
-      cachedTasks = await TaskStore.getAll();
-      connectionError.hidden = true;
-    } catch (err) {
-      connectionError.hidden = false;
-      cachedTasks = [];
-    }
-
-    renderSummary(cachedTasks);
-    const visibleTasks = filterTasks(cachedTasks, currentFilter);
-    renderTaskItems(visibleTasks, cachedTasks.length);
-  }
-
-  /* ------------------------------------------------------------------
-   * Manejo del formulario (crear / editar)
-   * ------------------------------------------------------------------ */
-  function resetForm() {
-    form.reset();
-    idInput.value = "";
-    priorityInput.value = "medium";
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Agregar tarea";
-    cancelEditBtn.hidden = true;
-    titleError.textContent = "";
-    deadlineError.textContent = "";
-    titleInput.classList.remove("is-invalid");
-    deadlineInput.classList.remove("is-invalid");
-  }
-
-  function startEdit(task) {
-    idInput.value = task.id;
-    titleInput.value = task.title;
-    descriptionInput.value = task.description || "";
-    deadlineInput.value = task.deadline || "";
-    priorityInput.value = task.priority || "medium";
-    submitBtn.textContent = "Guardar cambios";
-    cancelEditBtn.hidden = false;
-    titleInput.focus();
-  }
-
-  form.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    if (!validateForm()) return;
-
-    const editingId = idInput.value;
-    const payload = {
-      title: titleInput.value.trim(),
-      description: descriptionInput.value.trim(),
-      deadline: deadlineInput.value || null,
-      priority: priorityInput.value,
-    };
-
-    submitBtn.disabled = true;
-    try {
-      if (editingId) {
-        await TaskStore.update(editingId, payload);
-      } else {
-        await TaskStore.create({ ...payload, completed: false });
-      }
-      resetForm();
-      await renderTasks();
-    } catch (err) {
-      submitBtn.disabled = false;
-      alert("No se pudo guardar la tarea en la base de datos. Revisa la consola para más detalles.");
-    }
-  });
-
-  cancelEditBtn.addEventListener("click", resetForm);
-
-  /* ------------------------------------------------------------------
-   * Acciones sobre cada tarea (completar / editar / eliminar)
-   * ------------------------------------------------------------------ */
-  taskList.addEventListener("click", async function (event) {
-    const item = event.target.closest(".task-item");
-    if (!item) return;
-    const id = item.dataset.id;
-
-    if (event.target.matches(".task-item__checkbox")) {
-      const checked = event.target.checked;
-      try {
-        await TaskStore.update(id, { completed: checked });
-        await renderTasks();
-      } catch (err) {
-        event.target.checked = !checked; // revertir si falló
-        alert("No se pudo actualizar el estado de la tarea.");
-      }
-      return;
-    }
-
-    const action = event.target.dataset.action;
-    if (action === "delete") {
-      const confirmed = window.confirm("¿Eliminar esta tarea? Esta acción no se puede deshacer.");
-      if (confirmed) {
-        try {
-          await TaskStore.remove(id);
-          await renderTasks();
-        } catch (err) {
-          alert("No se pudo eliminar la tarea.");
-        }
-      }
-      return;
-    }
-
-    if (action === "edit") {
-      const task = cachedTasks.find((t) => t.id === id);
-      if (task) startEdit(task);
-    }
-  });
-
-  /* ------------------------------------------------------------------
-   * Filtros
-   * ------------------------------------------------------------------ */
-  filterButtons.forEach((btn) => {
-    btn.addEventListener("click", async function () {
-      filterButtons.forEach((b) => b.classList.remove("is-active"));
-      btn.classList.add("is-active");
-      currentFilter = btn.dataset.filter;
-      await renderTasks();
-    });
-  });
-
-  /* ------------------------------------------------------------------
-   * Inicialización
-   * ------------------------------------------------------------------ */
-  document.addEventListener("DOMContentLoaded", renderTasks);
-  if (document.readyState !== "loading") {
-    renderTasks();
-  }
+	document.addEventListener("DOMContentLoaded", init);
 })();
