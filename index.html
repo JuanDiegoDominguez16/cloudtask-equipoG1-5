@@ -2,137 +2,99 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CloudTasks, aplicacion web para gestionar tareas personales y de equipo.">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CloudTasks</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
+    <div class="app">
+        <header class="app__header">
+            <h1>CloudTasks</h1>
+            <p class="app__subtitle">Gestor de tareas personales o de equipo</p>
+        </header>
 
-    <a class="skip-link" href="#lista-tareas">Ir a mis tareas</a>
+        <main class="app__main">
+            <p id="connection-error" class="connection-error" hidden>
+                No se pudo conectar con la base de datos. Verifica la URL y la clave (anon key) en
+                <code>js/supabaseClient.js</code>, y que las políticas RLS de la tabla <code>tasks</code> permitan
+                acceso al rol <code>anon</code>.
+            </p>
 
-    <header class="topbar">
+            <!-- Formulario para crear/editar tareas -->
+            <section class="card" aria-labelledby="form-title">
+                <h2 id="form-title">Nueva tarea</h2>
+                <form id="formulario-tarea" novalidate>
+                    <input type="hidden" id="task-id" />
 
-        <div class="topbar__inner">
-
-            <div class="brand">
-                <svg class="brand__mark" viewBox="0 0 32 32" role="img" aria-label="Logotipo de CloudTasks">
-                    <rect width="32" height="32" rx="9"></rect>
-                    <path d="M9 16.5l4.5 4.5L23 11.5" fill="none" stroke="#fff" stroke-width="2.6"
-                        stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-
-                <div class="brand__text">
-                    <h1 class="brand__name">CloudTasks</h1>
-                    <p class="brand__tagline">Gestion de tareas personales y de equipo</p>
-                </div>
-            </div>
-
-            <p class="topbar__summary" id="resumen" aria-live="polite">Cargando tus tareas.</p>
-
-        </div>
-
-    </header>
-
-    <main class="layout">
-
-        <!-- Formulario de creacion de tareas -->
-        <section class="panel panel--form" aria-labelledby="titulo-formulario">
-
-            <h2 class="panel__title" id="titulo-formulario">Nueva tarea</h2>
-
-            <form class="form" id="formulario-tarea" novalidate>
-
-                <div class="field">
-                    <label class="field__label" for="title">Titulo</label>
-                    <input class="field__input" type="text" id="title" name="title" maxlength="80"
-                        placeholder="Configurar el repositorio en GitHub" autocomplete="off"
-                        aria-describedby="error-title">
-                    <p class="field__error" id="error-title" role="alert"></p>
-                </div>
-
-                <div class="field">
-                    <label class="field__label" for="description">Descripcion</label>
-                    <textarea class="field__input field__input--area" id="description" name="description" rows="3"
-                        maxlength="280" placeholder="Que hay que hacer exactamente"
-                        aria-describedby="error-description"></textarea>
-                    <p class="field__error" id="error-description" role="alert"></p>
-                </div>
-
-                <div class="field-row">
-
-                    <div class="field">
-                        <label class="field__label" for="deadline">Fecha limite</label>
-                        <input class="field__input" type="date" id="deadline" name="deadline"
-                            aria-describedby="error-deadline">
-                        <p class="field__error" id="error-deadline" role="alert"></p>
+                    <div class="form-group">
+                        <label for="title">Título *</label>
+                        <input type="text" id="title" name="title" maxlength="80"
+                            placeholder="Ej: Preparar entrega del laboratorio" required />
+                        <small class="error-message" id="title-error"></small>
                     </div>
 
-                    <div class="field">
-                        <label class="field__label" for="priority">Prioridad</label>
-                        <select class="field__input" id="priority" name="priority" aria-describedby="error-priority">
-                            <option value="">Elegir</option>
-                            <option value="low">Baja</option>
-                            <option value="medium">Media</option>
-                            <option value="high">Alta</option>
-                        </select>
-                        <p class="field__error" id="error-priority" role="alert"></p>
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea id="description" name="description" maxlength="300" rows="3"
+                            placeholder="Detalles de la tarea (opcional)"></textarea>
                     </div>
 
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deadline">Fecha límite</label>
+                            <input type="date" id="deadline" name="deadline" />
+                            <small class="error-message" id="deadline-error"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="priority">Prioridad</label>
+                            <select id="priority" name="priority">
+                                <option value="low">Baja</option>
+                                <option value="medium" selected>Media</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="submit-btn" class="btn btn--primary">Agregar tarea</button>
+                        <button type="button" id="cancel-edit-btn" class="btn btn--ghost" hidden>Cancelar
+                            edición</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Listado de tareas -->
+            <section class="card" aria-labelledby="list-title">
+                <div class="list-header">
+                    <h2 id="list-title">Mis tareas</h2>
+                    <div class="filters" role="group" aria-label="Filtrar tareas">
+                        <button class="filter-btn is-active" data-filter="all">Todas</button>
+                        <button class="filter-btn" data-filter="pending">Pendientes</button>
+                        <button class="filter-btn" data-filter="completed">Completadas</button>
+                    </div>
                 </div>
 
-                <button class="button button--primary" type="submit">Crear tarea</button>
+                <p class="task-summary" id="task-summary"></p>
 
-                <p class="form__status" id="estado-formulario" role="status"></p>
+                <ul id="task-list" class="task-list"></ul>
 
-            </form>
+                <p id="empty-state" class="empty-state" hidden>
+                    No hay tareas registradas todavía. ¡Agrega la primera!
+                </p>
+            </section>
+        </main>
 
-        </section>
+        <footer class="app__footer">
+            <p>CloudTasks &middot; Etapa 1: desarrollo local con HTML, CSS y JavaScript</p>
+        </footer>
+    </div>
 
-        <!-- Listado de tareas -->
-        <section class="panel panel--list" aria-labelledby="titulo-lista">
-
-            <div class="list__head">
-
-                <h2 class="panel__title" id="titulo-lista">Mis tareas</h2>
-
-                <div class="filters" role="group" aria-label="Filtrar tareas">
-                    <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">
-                        Todas <span class="filter__count" data-count="all">0</span>
-                    </button>
-                    <button class="filter" type="button" data-filter="pending" aria-pressed="false">
-                        Pendientes <span class="filter__count" data-count="pending">0</span>
-                    </button>
-                    <button class="filter" type="button" data-filter="completed" aria-pressed="false">
-                        Completadas <span class="filter__count" data-count="completed">0</span>
-                    </button>
-                </div>
-
-            </div>
-
-            <ul class="tasks" id="lista-tareas"></ul>
-
-            <p class="empty" id="estado-vacio" hidden></p>
-
-        </section>
-
-    </main>
-
-    <footer class="footer">
-        <p id="nota-persistencia">Etapa 1, ejecucion local. Las tareas se guardan en el almacenamiento de este
-            navegador.</p>
-    </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseCliente.js"></script>
     <script src="js/app.js"></script>
-
 </body>
 
 </html>
