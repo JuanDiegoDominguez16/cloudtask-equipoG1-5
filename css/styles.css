@@ -234,6 +234,42 @@ textarea {
     font-size: var(--size-sm);
 }
 
+.sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--size-xs);
+    color: var(--ink-faint);
+}
+
+.sync-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background-color: currentColor;
+}
+
+.sync-status::after {
+    content: "Conectando";
+}
+
+.sync-status[data-estado="conectado"] {
+    color: var(--low);
+}
+
+.sync-status[data-estado="conectado"]::after {
+    content: "Sincronizado en vivo";
+}
+
+.sync-status[data-estado="sin-conexion"] {
+    color: var(--high);
+}
+
+.sync-status[data-estado="sin-conexion"]::after {
+    content: "Sin conexión en vivo";
+}
+
 .app__main {
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
