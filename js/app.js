@@ -18,6 +18,7 @@
 		emptyState: document.getElementById("empty-state"),
 		summary: document.getElementById("task-summary"),
 		connectionError: document.getElementById("connection-error"),
+		syncStatus: document.getElementById("sync-status"),
 		filters: [...document.querySelectorAll(".filter-btn")],
 	};
 
@@ -224,6 +225,63 @@
 		renderSummary();
 	}
 
+	/* Sincronizacion en tiempo real ---------------------------------------- */
+
+	/* Inserta o actualiza una tarea segun su id. Evita duplicados cuando el
+	   evento de Realtime corresponde a un cambio hecho en esta misma pestaña. */
+	function upsertTask(task) {
+		if (!task?.id) return;
+		const index = state.tasks.findIndex((current) => current.id === task.id);
+		if (index === -1) state.tasks.push(task);
+		else state.tasks[index] = { ...state.tasks[index], ...task };
+		render();
+	}
+
+	function removeTask(id) {
+		if (!id || !state.tasks.some((task) => task.id === id)) return;
+		state.tasks = state.tasks.filter((task) => task.id !== id);
+		render();
+	}
+
+	async function reloadTasks() {
+		try {
+			state.tasks = await repository.list();
+			dom.connectionError.hidden = true;
+			render();
+		} catch (error) {
+			console.error("No se pudieron cargar las tareas:", error);
+			dom.connectionError.hidden = false;
+		}
+	}
+
+	function startRealtime() {
+		if (typeof CloudTasksRealtime === "undefined") return;
+		CloudTasksRealtime.start({
+			client: window.supabaseClient,
+			onInsert: upsertTask,
+			onUpdate: upsertTask,
+			onDelete: removeTask,
+			onResync: reloadTasks,
+			onStatus: (status) => {
+				if (dom.syncStatus) dom.syncStatus.dataset.estado = status;
+			},
+		});
+	}
+
+	/* Arranque -------------------------------------------------------------- */
+
+	async function init() {
+		dom.deadline.min = new Date().toISOString().slice(0, 10);
+		dom.form.addEventListener("submit", handleSubmit);
+		dom.taskList.addEventListener("change", handleTaskAction);
+		dom.taskList.addEventListener("click", handleTaskAction);
+		dom.filters.forEach((button) => {
+			button.addEventListener("click", handleFilter);
+		});
+		await reloadTasks();
+		startRealtime();
+	}
+
 	async function handleSubmit(event) {
 		event.preventDefault();
 		const data = {
@@ -246,9 +304,8 @@
 		};
 		try {
 			const createdTask = await repository.create(task);
-			state.tasks.push(createdTask ?? task);
+			upsertTask(createdTask ?? task);
 			dom.form.reset();
-			render();
 		} catch (error) {
 			console.error("No se pudo crear la tarea:", error);
 			dom.connectionError.hidden = false;
@@ -265,10 +322,7 @@
 			const completed = actionElement.checked;
 			try {
 				await repository.update(id, { completed });
-				state.tasks = state.tasks.map((task) =>
-					task.id === id ? { ...task, completed } : task,
-				);
-				render();
+				upsertTask({ id, completed });
 			} catch (error) {
 				console.error("No se pudo actualizar la tarea:", error);
 				dom.connectionError.hidden = false;
@@ -279,8 +333,7 @@
 		if (task && window.confirm(`Eliminar la tarea "${task.title}"`)) {
 			try {
 				await repository.remove(id);
-				state.tasks = state.tasks.filter((candidate) => candidate.id !== id);
-				render();
+				removeTask(id);
 			} catch (error) {
 				console.error("No se pudo eliminar la tarea:", error);
 				dom.connectionError.hidden = false;
@@ -296,23 +349,6 @@
 			button.setAttribute("aria-pressed", String(isActive));
 		});
 		render();
-	}
-
-	async function init() {
-		dom.deadline.min = new Date().toISOString().slice(0, 10);
-		dom.form.addEventListener("submit", handleSubmit);
-		dom.taskList.addEventListener("change", handleTaskAction);
-		dom.taskList.addEventListener("click", handleTaskAction);
-		dom.filters.forEach((button) => {
-			button.addEventListener("click", handleFilter);
-		});
-		try {
-			state.tasks = await repository.list();
-			render();
-		} catch (error) {
-			console.error("No se pudieron cargar las tareas:", error);
-			dom.connectionError.hidden = false;
-		}
 	}
 
 	document.addEventListener("DOMContentLoaded", init);
