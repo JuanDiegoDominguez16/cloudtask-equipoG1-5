@@ -18,31 +18,38 @@
 :root {
     color-scheme: light;
 
-    /* Superficies y texto */
-    --bg: #eceff8;
-    --bg-glow-a: rgba(79, 70, 229, 0.16);
-    --bg-glow-b: rgba(14, 165, 233, 0.12);
+    /* Superficies y texto (paleta nexo) */
+    --bg: #f5f5ee;
+    --bg-glow-a: rgba(201, 255, 59, 0.12);
+    --bg-glow-b: rgba(11, 31, 42, 0.06);
     --surface: #ffffff;
-    --surface-soft: #f6f7fc;
-    --line: #e3e7f1;
-    --line-strong: #ccd3e4;
-    --ink: #151932;
-    --ink-soft: #5b6482;
-    --ink-faint: #8a92ac;
+    --surface-soft: #faf9f3;
+    --line: #e3e3d6;
+    --line-strong: #cfcfc0;
+    --ink: #0b1f2a;
+    --ink-soft: #4a5b64;
+    --ink-faint: #8b9399;
 
-    /* Marca */
-    --accent: #4f46e5;
-    --accent-strong: #3b32c4;
-    --accent-tint: #eeefff;
-    --accent-on: #ffffff;
+    /* Marca: lima sobre tinta */
+    --accent: #c9ff3b;
+    --accent-strong: #a8db22;
+    --accent-tint: rgba(201, 255, 59, 0.3);
+    --accent-on: #0b1f2a;
 
     /* Señales de prioridad y vencimiento */
-    --low: #0f766e;
-    --low-tint: #e5f4f1;
-    --medium: #b45309;
-    --medium-tint: #fdf1e1;
-    --high: #d13b3b;
-    --high-tint: #fdeceb;
+    --low: #6b7a80;
+    --low-tint: rgba(167, 167, 167, 0.22);
+    --medium: #7a9a12;
+    --medium-tint: rgba(201, 255, 59, 0.35);
+    --high: #d34436;
+    --high-tint: rgba(255, 107, 94, 0.18);
+
+     /* Marca para la barra superior */
+    --tinta: #0b1f2a;
+    --lima: #c9ff3b;
+    --crema: #f5f5ee;
+
+
 
     /* Tipografia */
     --font-display: "Outfit", "Trebuchet MS", system-ui, sans-serif;
@@ -76,40 +83,41 @@
     --select-arrow: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath fill=%27none%27 stroke=%27%235b6482%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M1 1.5 6 6.5l5-5%27/%3E%3C/svg%3E");
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        color-scheme: dark;
+/* El boton que decide el tema. */
+[data-theme="dark"] {
+    color-scheme: dark;
 
-        --bg: #0d1020;
-        --bg-glow-a: rgba(99, 102, 241, 0.22);
-        --bg-glow-b: rgba(14, 165, 233, 0.14);
-        --surface: #161a2c;
-        --surface-soft: #1c2136;
-        --line: #2a3049;
-        --line-strong: #3a4262;
-        --ink: #e9ecf7;
-        --ink-soft: #a6aec8;
-        --ink-faint: #7d86a2;
+    --bg: #071219;
+    --bg-glow-a: rgba(201, 255, 59, 0.1);
+    --bg-glow-b: rgba(14, 165, 233, 0.08);
+    --surface: #0f2733;
+    --surface-soft: #123140;
+    --line: #1d3d4c;
+    --line-strong: #2d5768;
+    --ink: #f5f5ee;
+    --ink-soft: #a9bcc4;
+    --ink-faint: #7b8f98;
 
-        --accent: #7f88ff;
-        --accent-strong: #9aa1ff;
-        --accent-tint: rgba(127, 136, 255, 0.16);
-        --accent-on: #10132a;
+    --accent: #c9ff3b;
+    --accent-strong: #d8ff6e;
+    --accent-tint: rgba(201, 255, 59, 0.16);
+    --accent-on: #0b1f2a;
 
-        --low: #4ecdb5;
-        --low-tint: rgba(78, 205, 181, 0.14);
-        --medium: #e0a44b;
-        --medium-tint: rgba(224, 164, 75, 0.14);
-        --high: #ff7b74;
-        --high-tint: rgba(255, 123, 116, 0.14);
+    --low: #a7a7a7;
+    --low-tint: rgba(167, 167, 167, 0.16);
+    --medium: #c9ff3b;
+    --medium-tint: rgba(201, 255, 59, 0.16);
+    --high: #ff8478;
+    --high-tint: rgba(255, 107, 94, 0.18);
 
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-        --shadow-md: 0 14px 34px -14px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.4);
-        --shadow-focus: 0 0 0 3px rgba(127, 136, 255, 0.3);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 16px 34px -20px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-focus: 0 0 0 3px rgba(201, 255, 59, 0.3);
 
-        --select-arrow: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath fill=%27none%27 stroke=%27%23a6aec8%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M1 1.5 6 6.5l5-5%27/%3E%3C/svg%3E");
-    }
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath fill=%27none%27 stroke=%27%23a9bcc4%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M1 1.5 6 6.5l5-5%27/%3E%3C/svg%3E");
 }
+
+
 
 /* 2. Base y utilidades --------------------------------------------------- */
 *,
