@@ -329,8 +329,7 @@ textarea {
 
 /* Panel del formulario: primera columna, fija al hacer scroll */
 .card[aria-labelledby="form-title"] {
-    position: sticky;
-    top: var(--space-3);
+    position: static;
 }
 
 .connection-error {
