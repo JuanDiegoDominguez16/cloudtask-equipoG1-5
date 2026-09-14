@@ -4,17 +4,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CloudTasks</title>
+  <title>nexo &middot; Gestor de tareas</title>
+  <meta name="theme-color" content="#0B1F2A" />
+  <link rel="icon" href="logo/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    /* Aplica el tema guardado antes del primer pintado, para que no
+       parpadee en claro al recargar con el oscuro activado. */
+    (function () {
+      var guardado = localStorage.getItem("nexo:tema");
+      var prefiereOscuro = matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = guardado || (prefiereOscuro ? "dark" : "light");
+    })();
+  </script>
 </head>
 
 <body>
   <div class="app">
     <header class="app__header">
-      <h1>CloudTasks</h1>
-      <p class="app__subtitle">Gestor de tareas personales o de equipo</p>
+      <a class="brand" href="#" data-filter="home">
+        <img class="brand__mark" src="logo/isotipo-nexo.svg" alt="" width="30" height="25" />
+        <span class="brand__name">nexo</span>
+      </a>
+
+      <!-- Menu de secciones:  -->
+      <nav class="filters" role="group" aria-label="Secciones">
+        <button class="filter-btn is-active" data-filter="home" aria-pressed="true">Inicio</button>
+        <button class="filter-btn" data-filter="all" aria-pressed="false">Todas</button>
+        <button class="filter-btn" data-filter="pending" aria-pressed="false">Pendientes</button>
+        <button class="filter-btn" data-filter="completed" aria-pressed="false">Completadas</button>
+      </nav>
+
+      <!-- Se deja en el DOM (por si se quiere reactivar mas adelante) pero
+           oculto: la clase .sync-status ahora tiene display:none. -->
       <span id="sync-status" class="sync-status" data-estado="conectando" role="status"
         aria-live="polite"></span>
+
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false"
+        aria-label="Cambiar a tema oscuro">
+        <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1 5.3 5.3" />
+        </svg>
+        <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z" />
+        </svg>
+      </button>
     </header>
 
     <main class="app__main">
@@ -23,6 +58,9 @@
         <code>js/supabaseClient.js</code>, y que las políticas RLS de la tabla <code>tasks</code> permitan
         acceso al rol <code>anon</code>.
       </p>
+
+      <!--  Vista Inicio: formulario + calendario -->
+      <div id="view-home">
 
       <!-- Formulario para crear/editar tareas -->
       <section class="card" aria-labelledby="form-title">
@@ -68,36 +106,75 @@
         </form>
       </section>
 
-      <!-- Listado de tareas -->
-      <section class="card" aria-labelledby="list-title">
+      <!-- Calendario: mes o semana, a eleccion -->
+      <section class="card card--calendar" aria-labelledby="calendar-title">
         <div class="list-header">
-          <h2 id="list-title">Mis tareas</h2>
+          <div class="calendar-nav">
+            <button type="button" class="icon-btn" id="cal-prev" aria-label="Periodo anterior">&lsaquo;</button>
+            <h2 id="calendar-title" aria-live="polite">Calendario</h2>
+            <button type="button" class="icon-btn" id="cal-next" aria-label="Periodo siguiente">&rsaquo;</button>
+          </div>
 
-          <div class="filters" role="group" aria-label="Filtrar tareas">
-            <button class="filter-btn is-active" data-filter="all">Todas</button>
-            <button class="filter-btn" data-filter="pending">Pendientes</button>
-            <button class="filter-btn" data-filter="completed">Completadas</button>
+          <div class="calendar-tools">
+            <button type="button" class="btn btn--ghost" id="cal-today">Hoy</button>
+            <div class="segmented" role="group" aria-label="Vista del calendario">
+              <button type="button" class="segmented__btn is-active" data-mode="month"
+                aria-pressed="true">Mes</button>
+              <button type="button" class="segmented__btn" data-mode="week"
+                aria-pressed="false">Semana</button>
+            </div>
           </div>
         </div>
 
-        <p class="task-summary" id="task-summary"></p>
+        <div id="calendar" class="calendar calendar--month"></div>
+      </section>
 
-        <ul id="task-list" class="task-list"></ul>
+      <!-- Tareas del dia seleccionado en el calendario -->
+      <section class="card card--day" aria-labelledby="day-title">
+        <div class="list-header">
+          <h2 id="day-title">Tareas del día</h2>
+          <span class="counter" id="day-counter"></span>
+        </div>
 
-        <p id="empty-state" class="empty-state" hidden>
-          No hay tareas registradas todavía. ¡Agrega la primera!
+        <ul id="day-list" class="task-list"></ul>
+
+        <p id="day-empty" class="empty-state" hidden>
+          Ningún vencimiento este día.
         </p>
       </section>
+
+      </div>
+      <!--  /Vista Inicio -->
+
+      <!--  Vista Listado: Todas / Pendientes / Completadas === -->
+      <div id="view-list" hidden>
+        <section class="card" aria-labelledby="list-title">
+          <div class="list-header">
+            <h2 id="list-title">Todas las tareas</h2>
+            <span class="counter" id="list-counter"></span>
+          </div>
+
+          <p class="task-summary" id="task-summary"></p>
+
+          <ul id="task-list" class="task-list"></ul>
+
+          <p id="empty-state" class="empty-state" hidden>
+            No hay tareas registradas todavía. ¡Agrega la primera!
+          </p>
+        </section>
+      </div>
+      <!-- /Vista Listado -->
     </main>
 
     <footer class="app__footer">
-      <p>CloudTasks &middot; Desplegado en Vercel con Supabase y Cloudflare</p>
+      <p>nexo &middot; Desplegado en Vercel con Supabase y Cloudflare</p>
     </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabaseCliente.js"></script>
   <script src="js/realtime.js"></script>
+  <script src="js/calendario.js"></script>
   <script src="js/app.js"></script>
 </body>
 
