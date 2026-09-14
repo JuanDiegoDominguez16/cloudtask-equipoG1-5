@@ -10,6 +10,9 @@
    7. Tarjeta de tarea
    8. Estado vacio
    9. Responsive y accesibilidad
+   10.Boton de tema
+   11.contador de tareas
+   12.Calendario
    ========================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
@@ -210,36 +213,40 @@ textarea {
 }
 
 .app__header {
-    display: grid;
-    gap: var(--space-1);
-    justify-items: center;
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: calc(var(--space-5) * -1) calc(var(--space-3) * -1) 0;
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--tinta);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.app__header h1 {
-    font-size: var(--size-2xl);
-    font-weight: 700;
-    background-image: linear-gradient(105deg, var(--ink) 20%, var(--accent) 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    padding-bottom: 2px;
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--crema);
+    margin-right: auto;
 }
 
-.app__header h1::after {
-    content: "";
+.brand__mark {
+    width: 30px;
+    height: 25px;
     display: block;
-    width: 52px;
-    height: 3px;
-    margin: var(--space-2) auto 0;
-    border-radius: 999px;
-    background-image: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.brand__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: -0.03em;
 }
 
 .app__subtitle {
-    max-width: 46ch;
-    color: var(--ink-soft);
-    font-size: var(--size-sm);
+    display: none;
 }
 
 .sync-status {
@@ -279,10 +286,22 @@ textarea {
 }
 
 .app__main {
+     display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Vista "Inicio": formulario + calendario en dos columnas */
+#view-home {
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
     align-items: start;
     gap: var(--space-3);
+}
+
+
+#view-home .card--day {
+    grid-column: 1 / -1;
 }
 
 .app__footer {
@@ -472,12 +491,15 @@ textarea {
 
 .filters {
     display: flex;
-    gap: var(--space-1);
-    padding: 4px;
-    border-radius: 999px;
-    background-color: var(--surface-soft);
-    border: 1px solid var(--line);
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
+
+.filters::-webkit-scrollbar {
+    display: none;
+}
+
 
 .filter-btn {
     background-color: transparent;
@@ -493,15 +515,14 @@ textarea {
 }
 
 .filter-btn:hover {
-    color: var(--accent);
+    background-color: rgba(245, 245, 238, 0.1);
+    color: var(--crema);
 }
 
 .filter-btn.is-active {
-    background-color: var(--surface);
-    border-color: var(--line-strong);
-    color: var(--accent);
-    font-weight: 600;
-    box-shadow: var(--shadow-sm);
+    background-color: var(--lima);
+    color: var(--tinta);
+    font-weight: 700;
 }
 
 .task-summary {
@@ -735,6 +756,7 @@ textarea {
     }
 
     .filters {
+        order: 3;
         width: 100%;
     }
 
@@ -764,5 +786,308 @@ textarea {
 
     .task:hover {
         transform: none;
+    }
+}
+
+/* 10. Boton de tema  */
+.theme-toggle {
+    width: 38px;
+    height: 38px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 245, 238, 0.25);
+    background-color: transparent;
+    color: var(--crema);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(245, 245, 238, 0.1);
+    border-color: rgba(245, 245, 238, 0.4);
+}
+
+.theme-toggle__icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Sol visible en tema claro, luna visible en tema oscuro. */
+.theme-toggle__icon--moon {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle__icon--sun {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle__icon--moon {
+    display: block;
+}
+
+/* 11. Contador de tareas junto a los titulos de lista/dia) */
+.counter {
+    font-size: var(--size-sm);
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 12. Calendario */
+.card--calendar .list-header,
+.card--day .list-header {
+    margin-bottom: var(--space-1);
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.calendar-nav h2 {
+    min-width: 12ch;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.calendar-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background-color: var(--surface);
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    color: var(--ink);
+    border-color: var(--accent);
+}
+
+.segmented {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background-color: var(--surface-soft);
+}
+
+.segmented__btn {
+    border: 0;
+    background-color: transparent;
+    color: var(--ink-soft);
+    padding: 4px 13px;
+    border-radius: 999px;
+    font-size: var(--size-sm);
+    cursor: pointer;
+}
+
+.segmented__btn.is-active {
+    background-color: var(--accent);
+    color: var(--accent-on);
+    font-weight: 600;
+}
+
+#calendar {
+    margin-top: var(--space-3);
+}
+
+.calendar__weekdays,
+.calendar__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.calendar__weekdays {
+    margin-bottom: 6px;
+}
+
+.calendar__weekday {
+    text-align: center;
+    font-size: var(--size-xs);
+    color: var(--ink-faint);
+    text-transform: capitalize;
+}
+
+.day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.calendar--month .day {
+    aspect-ratio: 1 / 1;
+    justify-content: flex-start;
+}
+
+.day:hover {
+    border-color: var(--accent);
+}
+
+.day--outside {
+    color: var(--ink-faint);
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.day--today {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.day--selected {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-on);
+}
+
+.day--selected .day__weekday,
+.day--selected .day__more {
+    color: var(--accent-on);
+}
+
+.day__num {
+    font-size: var(--size-sm);
+    font-weight: 600;
+}
+
+.day__weekday {
+    font-size: var(--size-xs);
+    color: var(--ink-faint);
+    text-transform: capitalize;
+}
+
+.day__dots {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--low);
+}
+
+.dot--medium {
+    background-color: var(--medium);
+}
+
+.dot--high {
+    background-color: var(--high);
+}
+
+.dot--done {
+    background-color: var(--ink-faint);
+    opacity: 0.5;
+}
+
+.day__more {
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+}
+
+/* Vista semana: celdas altas con los titulos de las tareas visibles */
+.calendar--week .calendar__weekdays {
+    display: none;
+}
+
+.calendar--week .day {
+    min-height: 148px;
+    align-items: stretch;
+    text-align: left;
+    padding: 8px;
+}
+
+.calendar--week .day__num {
+    font-size: var(--size-lg);
+}
+
+.day__mini {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.day__mini li {
+    font-size: 0.7rem;
+    line-height: 1.25;
+    padding: 3px 5px;
+    border-radius: 5px;
+    border-left: 3px solid var(--low);
+    background-color: var(--low-tint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.day__mini li.is-medium {
+    border-color: var(--medium);
+    background-color: var(--medium-tint);
+}
+
+.day__mini li.is-high {
+    border-color: var(--high);
+    background-color: var(--high-tint);
+}
+
+.day__mini li.is-done {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+@media (max-width: 640px) {
+    .calendar--week .calendar__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar--week .day {
+        min-height: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    .panel__head--calendar,
+    .calendar-nav,
+    .calendar-tools {
+        flex-wrap: wrap;
     }
 }
