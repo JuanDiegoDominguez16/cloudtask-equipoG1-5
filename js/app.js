@@ -7,7 +7,14 @@
 		high: { label: "Prioridad alta", level: 3 },
 	};
 
-	const state = { tasks: [], filter: "all" };
+	const state = { tasks: [], filter: "home" };
+	const LIST_TITLES = {
+		all: "Todas las tareas",
+		pending: "Tareas pendientes",
+		completed: "Tareas completadas",
+	};
+
+
 	const dom = {
 		form: document.getElementById("formulario-tarea"),
 		title: document.getElementById("title"),
@@ -20,6 +27,15 @@
 		connectionError: document.getElementById("connection-error"),
 		syncStatus: document.getElementById("sync-status"),
 		filters: [...document.querySelectorAll(".filter-btn")],
+		themeToggle: document.getElementById("theme-toggle"),
+		viewHome: document.getElementById("view-home"),
+		viewList: document.getElementById("view-list"),
+		listTitle: document.getElementById("list-title"),
+		listCounter: document.getElementById("list-counter"),
+		dayList: document.getElementById("day-list"),
+		dayEmpty: document.getElementById("day-empty"),
+		dayTitle: document.getElementById("day-title"),
+		dayCounter: document.getElementById("day-counter"),
 	};
 
 	const repository = {
@@ -222,8 +238,38 @@
 						? "Todavia no has completado ninguna tarea."
 						: "Aun no hay tareas. Crea la primera con el formulario.";
 		}
+		if (dom.listCounter) {
+			dom.listCounter.textContent = tasks.length
+				? `${tasks.length} ${tasks.length === 1 ? "tarea" : "tareas"}`
+				: "";
+		}
 		renderSummary();
+
+		// El calendario y el panel del dia se alimentan del mismo state.tasks.
+		if (typeof CloudTasksCalendar !== "undefined") {
+			CloudTasksCalendar.setTasks(state.tasks);
+			renderDayPanel();
+		}
 	}
+
+	/* Calendario :
+	   CloudTasksCalendar (js/calendario.js) dibuja la cuadricula; aqui solo se
+	   pinta, con las mismas funciones de arriba, la lista de "Tareas del dia". */
+	function renderDayPanel() {
+		const isoDate = CloudTasksCalendar.getSelectedISO();
+		const tasksDelDia = sortTasks(CloudTasksCalendar.getTasksOn(isoDate));
+		const esHoy = isoDate === new Date().toISOString().slice(0, 10);
+
+		dom.dayTitle.textContent = esHoy
+			? "Tareas de hoy"
+			: `Tareas del ${readableDate(isoDate)}`;
+		dom.dayCounter.textContent = tasksDelDia.length
+			? `${tasksDelDia.length} ${tasksDelDia.length === 1 ? "tarea" : "tareas"}`
+			: "";
+		dom.dayList.replaceChildren(...tasksDelDia.map(createTaskElement));
+		dom.dayEmpty.hidden = tasksDelDia.length > 0;
+	}
+
 
 	/* Sincronizacion en tiempo real ---------------------------------------- */
 
@@ -278,9 +324,39 @@
 		dom.filters.forEach((button) => {
 			button.addEventListener("click", handleFilter);
 		});
+		document.querySelector(".brand")?.addEventListener("click", (event) => {
+			event.preventDefault();
+			setFilter("home");
+		});
+		dom.themeToggle?.addEventListener("click", toggleTheme);
+		updateThemeButton();
+		if (typeof CloudTasksCalendar !== "undefined") {
+			CloudTasksCalendar.init(renderDayPanel);
+		}
 		await reloadTasks();
 		startRealtime();
 	}
+
+	/* Tema claro/oscuro ------------------------------------------------------
+	   El script inline en <head> ya deja html[data-theme] listo antes del
+	   primer pintado; aqui solo se atiende el clic y se guarda la eleccion. */
+	function updateThemeButton() {
+		const oscuro = document.documentElement.dataset.theme === "dark";
+		dom.themeToggle?.setAttribute("aria-pressed", String(oscuro));
+		dom.themeToggle?.setAttribute(
+			"aria-label",
+			oscuro ? "Cambiar a tema claro" : "Cambiar a tema oscuro",
+		);
+	}
+
+	function toggleTheme() {
+		const siguiente =
+			document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+		document.documentElement.dataset.theme = siguiente;
+		localStorage.setItem("nexo:tema", siguiente);
+		updateThemeButton();
+	}
+
 
 	async function handleSubmit(event) {
 		event.preventDefault();
@@ -341,14 +417,28 @@
 		}
 	}
 
-	function handleFilter(event) {
-		state.filter = event.currentTarget.dataset.filter;
+	/* Cambia de seccion: "home" (formulario + calendario) o una de las tres
+	   listas. Se reusa desde el clic en los botones y desde el logo. */
+	function setFilter(filter) {
+		state.filter = filter;
 		dom.filters.forEach((button) => {
-			const isActive = button.dataset.filter === state.filter;
+			const isActive = button.dataset.filter === filter;
 			button.classList.toggle("is-active", isActive);
 			button.setAttribute("aria-pressed", String(isActive));
 		});
+
+		const esHome = filter === "home";
+		dom.viewHome.hidden = !esHome;
+		dom.viewList.hidden = esHome;
+		if (!esHome) dom.listTitle.textContent = LIST_TITLES[filter] ?? "Tareas";
+
 		render();
+	}
+
+
+
+	function handleFilter(event) {
+		setFilter(event.currentTarget.dataset.filter);
 	}
 
 	document.addEventListener("DOMContentLoaded", init);
