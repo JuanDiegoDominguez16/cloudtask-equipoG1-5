@@ -683,6 +683,7 @@ textarea {
     background-color: var(--high);
 }
 
+.task__edit,
 .task__delete {
     flex: none;
     background-color: transparent;
@@ -697,6 +698,13 @@ textarea {
         background-color 0.15s ease;
 }
 
+
+.task__edit:hover {
+    color: var(--accent-strong);
+    border-color: var(--accent-strong);
+    background-color: var(--accent-tint);
+}
+ 
 .task__delete:hover {
     color: var(--high);
     border-color: var(--high);
@@ -769,6 +777,10 @@ textarea {
     }
 
     .task__delete {
+        margin-left: auto;
+    }
+
+    .task__edit {
         margin-left: auto;
     }
 }
