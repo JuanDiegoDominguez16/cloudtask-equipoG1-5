@@ -648,27 +648,27 @@ textarea {
 .priority {
     display: inline-flex;
     align-items: flex-end;
-    gap: 2px;
-    height: 12px;
+    gap: 3px;
+    height: 22px;
     padding-left: 2px;
 }
 
 .priority > span:not(.visually-hidden) {
-    width: 3px;
+    width: 6px;
     background-color: var(--line-strong);
-    border-radius: 1px;
+    border-radius: 1.5px;
 }
 
 .priority > span:nth-child(1) {
-    height: 5px;
+    height: 10px;
 }
 
 .priority > span:nth-child(2) {
-    height: 9px;
+    height: 20px;
 }
 
 .priority > span:nth-child(3) {
-    height: 12px;
+    height: 30px;
 }
 
 .priority--low span.is-on {
