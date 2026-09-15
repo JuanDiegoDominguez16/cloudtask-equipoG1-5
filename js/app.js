@@ -21,6 +21,10 @@
 		description: document.getElementById("description"),
 		deadline: document.getElementById("deadline"),
 		priority: document.getElementById("priority"),
+		taskId: document.getElementById("task-id"),
+		submitBtn: document.getElementById("submit-btn"),
+		cancelEditBtn: document.getElementById("cancel-edit-btn"),
+		formTitle: document.getElementById("form-title"),
 		taskList: document.getElementById("task-list"),
 		emptyState: document.getElementById("empty-state"),
 		summary: document.getElementById("task-summary"),
@@ -183,13 +187,20 @@
 		chip.textContent = deadline.text;
 		metadata.append(chip, createPriorityBars(task.priority));
 		body.append(title, description, metadata);
+		const editButton = document.createElement("button");
+		editButton.type = "button";
+		editButton.className = "task__edit";
+		editButton.dataset.action = "edit";
+		editButton.setAttribute("aria-label", `Editar "${task.title}"`);
+		editButton.textContent = "Editar";
+
 		const deleteButton = document.createElement("button");
 		deleteButton.type = "button";
 		deleteButton.className = "task__delete";
 		deleteButton.dataset.action = "delete";
 		deleteButton.setAttribute("aria-label", `Eliminar "${task.title}"`);
 		deleteButton.textContent = "Eliminar";
-		item.append(checkbox, body, deleteButton);
+		item.append(checkbox, body, editButton, deleteButton);
 		return item;
 	}
 
@@ -329,6 +340,7 @@
 			setFilter("home");
 		});
 		dom.themeToggle?.addEventListener("click", toggleTheme);
+		dom.cancelEditBtn?.addEventListener("click", cancelEdit);
 		updateThemeButton();
 		if (typeof CloudTasksCalendar !== "undefined") {
 			CloudTasksCalendar.init(renderDayPanel);
@@ -358,6 +370,34 @@
 	}
 
 
+	/* Edicion de tareas -------------------------------------------------- */
+
+	/* Carga una tarea existente en el formulario para editarla. */
+	function startEdit(task) {
+		if (!task) return;
+		dom.taskId.value = task.id;
+		dom.title.value = task.title;
+		dom.description.value = task.description ?? "";
+		dom.deadline.value = task.deadline;
+		dom.priority.value = task.priority;
+		renderErrors({});
+		dom.formTitle.textContent = "Editar tarea";
+		dom.submitBtn.textContent = "Guardar cambios";
+		dom.cancelEditBtn.hidden = false;
+		if (state.filter !== "home") setFilter("home");
+		dom.title.focus();
+	}
+
+	/* Vuelve el formulario a su estado de "Nueva tarea". */
+	function cancelEdit() {
+		dom.form.reset();
+		dom.taskId.value = "";
+		renderErrors({});
+		dom.formTitle.textContent = "Nueva tarea";
+		dom.submitBtn.textContent = "Agregar tarea";
+		dom.cancelEditBtn.hidden = true;
+	}
+
 	async function handleSubmit(event) {
 		event.preventDefault();
 		const data = {
@@ -372,6 +412,21 @@
 			document.getElementById(Object.keys(errors)[0])?.focus();
 			return;
 		}
+
+		const editingId = dom.taskId.value;
+
+		if (editingId) {
+			try {
+				await repository.update(editingId, data);
+				upsertTask({ id: editingId, ...data });
+				cancelEdit();
+			} catch (error) {
+				console.error("No se pudo actualizar la tarea:", error);
+				dom.connectionError.hidden = false;
+			}
+			return;
+		}
+
 		const task = {
 			id: createId(),
 			...data,
@@ -406,6 +461,10 @@
 			return;
 		}
 		const task = state.tasks.find((candidate) => candidate.id === id);
+		if (actionElement.dataset.action === "edit") {
+			startEdit(task);
+			return;
+		}
 		if (task && window.confirm(`Eliminar la tarea "${task.title}"`)) {
 			try {
 				await repository.remove(id);
