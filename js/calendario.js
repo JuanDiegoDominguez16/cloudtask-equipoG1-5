@@ -269,15 +269,21 @@ const CloudTasksCalendar = (() => {
 			boton.addEventListener("click", () => setMode(boton.dataset.mode, botonesModo));
 		});
 
-		els.calendar.addEventListener("click", (event) => {
+				els.calendar.addEventListener("click", (event) => {
 			const celda = event.target.closest("[data-date]");
 			if (!celda) return;
 			const [year, month, day] = celda.dataset.date.split("-").map(Number);
 			select(new Date(year, month - 1, day));
+			const prefiereMenosMovimiento = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+			document.getElementById("day-title")?.scrollIntoView({
+				behavior: prefiereMenosMovimiento ? "auto" : "smooth",
+				block: "start",
+			});
 		});
 
 		render();
 	}
-
 	return { init, setTasks, getSelectedISO, getTasksOn, goToday };
 })();
