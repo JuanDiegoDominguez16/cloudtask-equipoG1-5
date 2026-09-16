@@ -87,3 +87,6 @@ La aplicación integra diferentes servicios especializados para cubrir el desarr
                          │ Supabase         │
                          │ Realtime         │
                          └──────────────────┘
+---
+
+ 
