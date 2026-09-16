@@ -85,7 +85,7 @@ La aplicación integra diferentes servicios especializados para cubrir el desarr
                          └──────────────────┘
 ```
 
-El flujo de una petición es el siguiente: el usuario llega a través del dominio configurado en **Cloudflare** (DNS y HTTPS). Un **Cloudflare Worker** recibe la petición y sirve directamente los archivos estáticos del proyecto (HTML, CSS, JS); las rutas bajo `/api` quedan reservadas para redirigirse al despliegue en **Vercel** si en algún momento se necesita lógica adicional del lado del servidor. Una vez cargada la aplicación en el navegador, esta se comunica directamente con **Supabase**, que expone la base de datos **PostgreSQL** y el canal de **Realtime** usado para sincronizar tareas entre sesiones sin recargar la página.
+El flujo de una tarea es el siguiente: el usuario llega a través del dominio configurado en **Cloudflare** (DNS y HTTPS). Un **Cloudflare Worker** recibe la petición y sirve directamente los archivos estáticos del proyecto (HTML, CSS, JS); las rutas bajo `/api` quedan reservadas para redirigirse al despliegue en **Vercel** si en algún momento se necesita lógica adicional del lado del servidor. Una vez cargada la aplicación en el navegador, esta se comunica directamente con **Supabase**, que expone la base de datos **PostgreSQL** y el canal de **Realtime** usado para sincronizar tareas entre sesiones sin recargar la página.
 
 **Nota:** el dominio propio en Cloudflare todavía está en proceso de aprobación, por lo que mientras tanto la aplicación se puede acceder directamente desde la URL de Vercel.
 
