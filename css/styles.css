@@ -817,7 +817,7 @@ textarea {
 
 .theme-toggle:hover {
     background-color: rgba(245, 245, 238, 0.1);
-    border-color: rgba(245, 245, 238, 0.4);
+    border-color: rgba(255, 0, 208, 0.4);
 }
 
 .theme-toggle__icon {
