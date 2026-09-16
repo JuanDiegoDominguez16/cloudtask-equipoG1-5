@@ -42,7 +42,7 @@
     /* Señales de prioridad y vencimiento */
     --low: #6b7a80;
     --low-tint: rgba(167, 167, 167, 0.22);
-    --medium: #7a9a12;
+    --medium: #0088ff;
     --medium-tint: rgba(201, 255, 59, 0.35);
     --high: #d34436;
     --high-tint: rgba(255, 107, 94, 0.18);
